@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  ros2_gazebo:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: ros2_humble_gazebo_fortress:latest
+    container_name: ros2_simulation
+    restart: unless-stopped
+    
+    # Allows the container to share the host's network (essential for ROS2 DDS discovery)
+    network_mode: host
+    
+    # Enables interactive terminal control
+    stdin_open: true
+    tty: true
+
+    environment:
+      # Passes your screen display details to the container for Gazebo GUI
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      # Configures the ROS2 DDS middleware to communicate properly on host network
+      - ROS_DOMAIN_ID=0
+
+    volumes:
+      # Mounts the X11 graphics socket so Gazebo can open a 3D window
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Mounts your repository folder into the container for live editing code
+      - ..:/workspace:rw
+
+    # Gives the container higher privileges to access host hardware devices
+    privileged: true
