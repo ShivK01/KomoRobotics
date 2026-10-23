@@ -1,33 +1,23 @@
-version: '3.8'
-
 services:
   ros2_gazebo:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: ros2_humble_gazebo_fortress:latest
+
+    image: ros2_humble_gazebo_fortress:latest # Name tagged to built image
     container_name: ros2_simulation
-    restart: unless-stopped
-    
-    # Allows the container to share the host's network (essential for ROS2 DDS discovery)
-    network_mode: host
-    
-    # Enables interactive terminal control
-    stdin_open: true
+    restart: unless-stopped                   # Restarts container on crash or machine reboot unless it is explicitly stopped
+    network_mode: host                        # Allows the container to share the host's network (essential for ROS2 DDS discovery)
+    stdin_open: true                          # Enables interactive terminal control (equivalent to docker run -it)
     tty: true
 
     environment:
-      # Passes your screen display details to the container for Gazebo GUI
-      - DISPLAY=${DISPLAY}
-      - QT_X11_NO_MITSHM=1
-      # Configures the ROS2 DDS middleware to communicate properly on host network
-      - ROS_DOMAIN_ID=0
+      - DISPLAY=${DISPLAY} # Passes your screen display details to the container for Gazebo GUI
+      - QT_X11_NO_MITSHM=1 # Disables X11 extension that Qt apps like Gazebo's GUI often has trouble with inside containers
+      - ROS_DOMAIN_ID=0    # Sets ROS2 domain for node discovery
 
     volumes:
-      # Mounts the X11 graphics socket so Gazebo can open a 3D window
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      # Mounts your repository folder into the container for live editing code
-      - ..:/workspace:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw  # Mounts the X11 graphics socket so Gazebo can open a 3D window (linux host only)
+      - ..:/workspace:rw                  # Mounts your repository folder into the container for live editing code
 
-    # Gives the container higher privileges to access host hardware devices
-    privileged: true
+    privileged: true # Gives the container higher privileges to access host hardware devices

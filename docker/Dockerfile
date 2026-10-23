@@ -2,21 +2,37 @@
 FROM osrf/ros:humble-desktop-full
 
 # 2. Prevent interactive prompts during installation
-ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND=noninteractive
 
-# 3. Install necessary tools and setup the Gazebo Fortress (Ignition) repository
+# 3. Registers the OSRF repo with apt so we can install Gazebo Fortress
 RUN apt-get update && apt-get install -y \
+    ca-certificates \
     curl \
     gnupg \
     lsb-release \
-    && curl https://osrfoundation.org --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
-    && echo "deb [signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://osrfoundation.org $(lsb_release -cs) main" \
-    > /etc/apt/sources.list.p/gazebo-stable.list
+    && curl -fsSL https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg  \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" > /etc/apt/sources.list.d/gazebo-stable.list
 
-# 4. Install Gazebo Fortress and the ROS2 integration bridge
+# 4. Install packages
 RUN apt-get update && apt-get install -y \
+    # Gazebo Fortress
     ignition-fortress \
+    # ROS2 gazebo integration bridge
     ros-humble-ros-gz \
+    # Converts .xacro to URDF
+    ros-humble-xacro \
+    # Turns URDF into frame tree RViz displays (prob already in humble)
+    ros-humble-robot-state-publisher \
+    # Sliders in RViz to turn wheels and check joints
+    ros-humble-joint-state-publisher-gui \
+    # Drives the robot using keyboard input
+    ros-humble-teleop-twist-keyboard \
+    # Draws coordinate frame tree
+    ros-humble-tf2-tools \
+    # colcon build command
+    python3-colcon-common-extensions \
+    # Other useful tools
+    bash-completion nano \
     && rm -rf /var/lib/apt/lists/*
 
 # 5. Automatically source ROS2 and Gazebo setups when opening a terminal inside the container
